@@ -130,9 +130,8 @@ ENV/
 env.bak/
 venv.bak/
 wvs_venv/
-/wvs_venv
-/data
 data/
+/data
 
 # Spyder project settings
 .spyderproject
