@@ -15,5 +15,3 @@ variable_mappings = [
 # Example usage of the variable mappings
 for mapping in variable_mappings:
     print(f'{mapping},')  # Print the first 5 mappings for illustration
-
-# This dictionary can be saved or used later in the main script for mapping variables
