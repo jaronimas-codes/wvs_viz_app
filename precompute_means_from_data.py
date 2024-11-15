@@ -2,7 +2,7 @@ import pandas as pd
 from variable_mappings import variable_mappings  # Ensure this file contains the question mappings
 
 # Load question mappings for the first 10 questions
-question_options = {list(item.keys())[0]: list(item.values())[0] for item in variable_mappings}
+question_options = {list(item.keys())[0]: list(item.values())[0] for item in variable_mappings} 
 
 # Load the data
 data = pd.read_csv('data/data.csv')  # Updated path to match your specified file location
@@ -19,15 +19,16 @@ for question_code in question_options.keys():
         # Replace invalid values with NaN
         data[question_code] = data[question_code].apply(lambda x: x if x not in [-5, -4, -2, -1] else pd.NA)
         
-        # Reverse the scale for the column
-        data[question_code] = data[question_code].apply(lambda x: 5 - x if pd.notna(x) else pd.NA)
-
-        # Try converting to numeric; if fails, skip the column
+        # Try to reverse the scale and convert to numeric; handle any exceptions
         try:
+            # Reverse the scale for the column
+            data[question_code] = data[question_code].apply(lambda x: 5 - x if pd.notna(x) else pd.NA)
+            
+            # Convert to numeric
             data[question_code] = pd.to_numeric(data[question_code])
             valid_columns[question_code] = 'mean'  # Include only numeric columns
-        except ValueError:
-            print(f"Skipping non-numeric column: {question_code}")
+        except (ValueError, TypeError):
+            print(f"Skipping problematic column: {question_code}")
 
 # Group by country and wave, calculate mean for valid questions
 mean_data = data.groupby(['COUNTRY_ALPHA', 'S002VS']).agg(valid_columns).reset_index()
