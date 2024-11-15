@@ -19,6 +19,9 @@ for question_code in question_options.keys():
         # Replace invalid values with NaN
         data[question_code] = data[question_code].apply(lambda x: x if x not in [-5, -4, -2, -1] else pd.NA)
         
+        # Reverse the scale for the column
+        data[question_code] = data[question_code].apply(lambda x: 5 - x if pd.notna(x) else pd.NA)
+
         # Try converting to numeric; if fails, skip the column
         try:
             data[question_code] = pd.to_numeric(data[question_code])
@@ -31,3 +34,5 @@ mean_data = data.groupby(['COUNTRY_ALPHA', 'S002VS']).agg(valid_columns).reset_i
 
 # Save the mean values into a CSV file
 mean_data.to_csv('precomputed_means.csv', index=False)
+
+print("Precomputed means saved to 'precomputed_means.csv'.")
