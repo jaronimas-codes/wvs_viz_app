@@ -17,28 +17,26 @@ for question_code in question_options.keys():
             continue
 
         # Replace invalid values with NaN
-        data[question_code] = data[question_code].apply(lambda x: x if x not in [-5, -4, -2, -1] else pd.NA)
+        data[question_code] = data[question_code].apply(lambda x: x if x > 0 else pd.NA)
 
+        # Try converting to numeric; handle any exceptions
         try:
             # Convert to numeric
-            data[question_code] = pd.to_numeric(data[question_code], errors='coerce')
+            data[question_code] = pd.to_numeric(data[question_code])
 
-            # Determine transformation based on max value in the column
-            max_value = data[question_code].max()
-            if max_value == 4:
-                # Reverse the scale for columns with a max value of 4
-                data[question_code] = data[question_code].apply(lambda x: 5 - x if pd.notna(x) else pd.NA)
-
-            # Add column to the valid columns dictionary for aggregation
-            valid_columns[question_code] = 'mean'
-
+            # Add mean, min, and max aggregations
+            valid_columns[question_code] = ['max']
         except (ValueError, TypeError):
             print(f"Skipping problematic column: {question_code}")
 
-# Group by country and wave, calculate mean for valid questions
-mean_data = data.groupby(['COUNTRY_ALPHA', 'S002VS']).agg(valid_columns).reset_index()
+# Group by country and wave, calculate mean, min, and max for valid questions
+mean_data = data.groupby(['COUNTRY_ALPHA', 'S002VS']).agg(valid_columns)
 
-# Save the mean values into a CSV file
-mean_data.to_csv('precomputed_means.csv', index=False)
+# Flatten the column names
+mean_data.columns = ['_'.join(col).strip() for col in mean_data.columns.values]
+mean_data.reset_index(inplace=True)
 
-print("Precomputed means saved to 'precomputed_means.csv'.")
+# Save the mean, min, and max values into a CSV file
+mean_data.to_csv('precomputed_max.csv', index=False)
+
+print("Precomputed means, min, and max saved to 'precomputed_means_with_min_max.csv'.")
