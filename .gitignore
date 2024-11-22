@@ -133,6 +133,10 @@ wvs_venv/
 /wvs_venv
 /data
 data/
+ignored_data/
+ignored_mappings/
+
+
 
 # Spyder project settings
 .spyderproject

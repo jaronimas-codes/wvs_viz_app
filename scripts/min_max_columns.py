@@ -1,5 +1,5 @@
 import pandas as pd
-from variable_mappings import variable_mappings  # Ensure this file contains the question mappings
+from variable_mappings_env import variable_mappings  # Ensure this file contains the question mappings
 
 # Load question mappings for all questions
 question_options = {list(item.keys())[0]: list(item.values())[0] for item in variable_mappings}

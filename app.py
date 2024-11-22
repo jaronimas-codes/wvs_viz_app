@@ -2,7 +2,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 import random
-from variable_mappings import variable_mappings
+from variable_mappings_env import variable_mappings
 
 # Custom CSS to enlarge text and maximize graph area
 st.markdown(
