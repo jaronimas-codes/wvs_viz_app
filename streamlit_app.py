@@ -20,7 +20,7 @@ st.markdown(
 # Cached function to load the precomputed data
 @st.cache_data
 def load_precomputed_data():
-    return pd.read_csv('precomputed_means.csv')
+    return pd.read_csv('precomputed_env_data.csv')
 
 mean_data = load_precomputed_data()
 
@@ -38,8 +38,8 @@ st.markdown("<div class='title'>World Values Survey Data Visualization</div>", u
 # Sidebar for filters and citation
 st.sidebar.header("Filters")
 default_countries = ['AUS', 'CAN', 'CHN', 'RUS', 'DEU', 'LTU', 'CHE']
-selected_countries = st.sidebar.multiselect("Select Countries", mean_data['COUNTRY_ALPHA'].unique(), default=default_countries)
-selected_wave = st.sidebar.multiselect("Select Survey Wave", mean_data['S002VS'].unique(), default=mean_data['S002VS'].unique())
+selected_countries = st.sidebar.multiselect("Select Countries", mean_data['Country'].unique(), default=default_countries)
+selected_wave = st.sidebar.multiselect("Select Survey Wave", mean_data['Wave'].unique(), default=mean_data['Wave'].unique())
 
 # Citation in the sidebar
 st.sidebar.markdown("""
@@ -76,17 +76,17 @@ if question_options:
         selected_question_label = question_options[selected_question_key]
 
         filtered_data = mean_data[
-            (mean_data['COUNTRY_ALPHA'].isin(selected_countries)) & (mean_data['S002VS'].isin(selected_wave))
-        ][['COUNTRY_ALPHA', 'S002VS', selected_question_key]].rename(columns={selected_question_key: 'mean_response'})
+            (mean_data['Country'].isin(selected_countries)) & (mean_data['Wave'].isin(selected_wave))
+        ][['Country', 'Wave', selected_question_key]].rename(columns={selected_question_key: 'mean_response'})
 
         try:
             fig = px.line(
                 filtered_data,
-                x='S002VS',
+                x='Wave',
                 y='mean_response',
-                color='COUNTRY_ALPHA',
+                color='Country',
                 markers=True,
-                labels={'S002VS': 'Survey Wave', 'mean_response': f'Mean {selected_question_label}'},
+                labels={'Wave': 'Survey Wave', 'mean_response': f'Mean {selected_question_label}'},
                 title=f'Mean "{selected_question_label}" by Country and Survey Wave'
             )
             st.plotly_chart(fig, key=f'fig_{i}', use_container_width=True)
