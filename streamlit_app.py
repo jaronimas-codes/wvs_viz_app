@@ -31,7 +31,9 @@ width, height = image.size
 image = image.crop((0, height * 0.25, width, height * 0.9))
 
 # Display the image at the top
-st.image(image, caption="No Planet B, Photo by Markus Spiske: https://www.pexels.com/photo/climate-road-landscape-people-2990650/", use_container_width=True)
+st.image(image, caption="No Planet B, Photo by Markus Spiske: https://www.pexels.com/photo/climate-road-landscape-people-2990650/", 
+        #  use_container_width=True
+         )
 
 # Cached function to load the precomputed data
 @st.cache_data
@@ -157,6 +159,7 @@ st.markdown("""
 This section shows the percentage of youth (under 29 years old) who agreed or strongly agreed with the selected question for a single wave.
 """)
 
+# Allow selection of countries for this step
 selected_countries_names_step_2 = st.multiselect(
     "Choose countries",
     options=all_countries_names,
@@ -176,17 +179,18 @@ selected_wave_single = st.selectbox(
 reverse_country_mapping = {v: k for k, v in country_mapping.items()}  # Reverse the mapping for lookup
 selected_countries_3 = [reverse_country_mapping.get(country, country) for country in selected_countries_names_step_2]
 
-# Filter precomputed age data for youth responses, selected countries, and the same selected question
-if question_options:
+# Ensure the selected question key exists in the columns of age_data
+if selected_question_key in age_data.columns:
     selected_question_label = question_options[selected_question_key]
 
-    # Filter data
+    # Filter data for the selected wave, countries, and youth
     filtered_age_data = age_data[
-        (age_data['Wave'] == selected_wave_single) & 
-        (age_data['Country'].isin(selected_countries_3)) &  # Use mapped country codes
-        (age_data['Variable'] == selected_question_key) & 
-        (age_data['Age_Group'] == 'Under 29')  # Youth filter
-    ]
+        (age_data['Wave'] == selected_wave_single) &
+        (age_data['Country'].isin(selected_countries_3))  # Use mapped country codes
+    ][['Country', selected_question_key]]  # Select only relevant columns
+
+    # Rename the selected question column for clarity
+    filtered_age_data = filtered_age_data.rename(columns={selected_question_key: 'Percentage_Favorable'})
 
     if filtered_age_data.empty:
         st.write(f"No data available for '{selected_question_label}' with the chosen countries and wave.")
@@ -224,20 +228,10 @@ if question_options:
         # Display the bar chart
         st.plotly_chart(fig, use_container_width=True)
 else:
-    st.write("No available questions found in the precomputed data.")
-
-    
-    
+    st.write(f"The question '{selected_question_label}' is not available in the data.")
 
 # Add a citation for the data source
 st.markdown("""---""")
-
-
-
-
-
-
-
 
 # Step 3: CO₂ Emissions Trends
 st.markdown("""
