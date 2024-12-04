@@ -6,7 +6,7 @@ from country_mapping import country_info
 from variable_mappings_env import variable_mappings  # Ensure this file contains the question mappings
 import pycountry
 
-# Custom CSS to style the app with an environmental theme
+# Custom CSS to style the app with a unified environmental theme
 st.markdown(
     """
     <style>
@@ -21,7 +21,7 @@ st.markdown(
 
         /* Headers and Titles */
         h1, h2, h3, h4, h5, h6 {
-            color: #2e7d32; /* Dark green for headers */
+            color: #1b5e20; /* Dark green for headers */
             font-family: 'Arial', sans-serif;
         }
 
@@ -36,12 +36,25 @@ st.markdown(
             color: white !important;
         }
 
+        /* Buttons and Selection Boxes */
+        # .st-dq, .st-dr {
+        #     background-color: #66bb6a !important; /* Green buttons */
+        #     color: white !important;
+        # }
+
         /* Citations Section */
         .citation-section {
             border-left: 5px solid #388e3c;
             background-color: #f1f8e9; /* Soft green */
             padding: 1rem;
             margin: 1rem 0;
+        }
+
+        /* Table Styles */
+        .dataframe {
+            border: 1px solid #388e3c;
+            border-radius: 5px;
+            overflow: hidden;
         }
     </style>
     """,
@@ -79,14 +92,31 @@ def load_co2_data():
 def load_tax_data():
     return pd.read_csv('tax_summary.csv')
 
+# Load the EPI data (replace 'ep.csv' with the correct file path)
+@st.cache_data
+def load_epi_data():
+    return pd.read_csv('epi.csv', delimiter=';')
+
 # Load data
 env_data = load_precomputed_env_data()
 age_data = load_precomputed_age_data()
 co2_data = load_co2_data()
 tax_data = load_tax_data()
+epi_data = load_epi_data()
 
 # Country mapping
 country_mapping = {info["country_3"]: info["country_name"] for info in country_info}
+
+custom_green_scale = [
+    "#99cc99",  # Soft, muted light green
+    "#33cc33",  # Bright green
+    "#00b359",  # Rich green
+    "#009933",  # Medium green
+    "#008000",  # Medium-dark green
+    "#006600",  # Dark green
+    "#004d00",  # Very dark green
+    "#003300"   # Very dark green (almost black)
+]
 
 # Filter variable_mappings to include only questions present in env_data columns
 question_options = {
@@ -110,7 +140,7 @@ default_countries_codes = ['AUS', 'CAN', 'CHN', 'RUS', 'DEU', 'CHE', 'USA']
 default_countries_names = [country_mapping.get(c3, c3) for c3 in default_countries_codes]
 
 selected_countries_names = st.multiselect(
-    "Choose countries",
+    "Select countries",
     options=all_countries_names,
     default=default_countries_names,
     key="country_selection"
@@ -122,7 +152,7 @@ selected_countries_3 = [k for k, v in country_mapping.items() if v in selected_c
 all_waves = sorted(env_data['Wave'].unique())
 
 selected_waves = st.multiselect(
-    "Choose survey waves. (2: 1990-1994, 3: 1995-1999, 4: 2000-2004, 5: 2005-2009, 6: 2010-2014, 7: 2017-2022 )",
+    "Select survey waves. (2: 1990-1994, 3: 1995-1999, 4: 2000-2004, 5: 2005-2009, 6: 2010-2014, 7: 2017-2022 )",
     options=all_waves,
     default=all_waves,
     key="wave_selection"
@@ -131,7 +161,7 @@ selected_waves = st.multiselect(
 # Question selection
 if question_options:
     selected_question_key = st.selectbox(
-        "Choose a question to visualize", 
+        "Select a question to visualize", 
         options=list(question_options.keys()), 
         format_func=lambda x: question_options[x],
         index=3,
@@ -152,12 +182,10 @@ if question_options:
             color='Country',
             markers=True,
             labels={'Wave': 'Survey Wave', 'mean_response': f''},
-            title=f'% of Agree and Strongly Agree to "{selected_question_label}" ',
-            color_discrete_sequence=px.colors.sequential.Blues
+            # title=f'% of Agree and Strongly Agree to "{selected_question_label}" ',
+            # color_discrete_sequence=custom_green_scale
+            color_discrete_sequence=px.colors.sequential.Viridis
         )
-        # fig.update_layout(
-        #     title={'text': f'% of Agree and Strongly Agree to "{selected_question_label}" ', 'x': 0.5}
-        # )
         st.plotly_chart(fig, use_container_width=True)
     else:
         st.write(f"No data available for the selected question '{selected_question_label}' with the chosen countries and waves.")
@@ -194,7 +222,7 @@ if selected_question_key in age_data.columns:
             y='Percentage_Favorable',
             text='Percentage_Favorable',
             color='Percentage_Favorable',
-            color_continuous_scale='greens',
+            color_continuous_scale=custom_green_scale,
             labels={'Percentage_Favorable': 'Percentage Favorable (%)'}
         )
         fig.update_traces(texttemplate='%{text:.1f}%', textposition='outside')
@@ -222,13 +250,20 @@ if not filtered_co2_data.empty:
         x='year',
         y='co2_per_capita',
         color='iso_code',
-        labels={'year': 'Year', 'co2_per_capita': 'CO₂ Emissions Per Capita (Metric Tons)'},
-        title="CO₂ Emissions Per Capita Trends (1981–2023)",
-        color_discrete_sequence=px.colors.sequential.PuBu
+        labels={'year': 'Year', 
+                'co2_per_capita': 'CO₂ Emissions Per Capita (Metric Tons)'
+                },
+        # title="CO₂ Emissions Per Capita Trends (1981–2023)",
+        color_discrete_sequence=custom_green_scale
     )
+    # Update the layout to set the legend title
+    fig.update_layout(legend_title_text='Country')
     st.plotly_chart(fig, use_container_width=True)
 
+
+
 st.markdown("<hr>", unsafe_allow_html=True)
+
 
 # Step 4: Carbon Pricing Map
 st.markdown("""
@@ -236,81 +271,141 @@ st.markdown("""
 This map shows the implementation of Carbon Pricing Instruments (Carbon Tax and Emission Trading Systems - ETS) around the world.
 """)
 
-iso3_codes = [country.alpha_3 for country in pycountry.countries]
-all_countries = pd.DataFrame(iso3_codes, columns=["ISO3"])
-all_countries["Instrument"] = "None"
 
-def classify_instrument(row):
-    if row["Carbon Tax"] > 0 and row["ETS"] > 0:
-        return "Both"
-    elif row["Carbon Tax"] > 0:
-        return "Carbon Tax"
-    elif row["ETS"] > 0:
-        return "ETS"
-    else:
-        return "None"
-    
-# Classify instruments in the tax_data
-tax_data["Instrument"] = tax_data.apply(classify_instrument, axis=1)
-
-# Merge tax data with all countries
-merged_data = pd.merge(all_countries, tax_data, on="ISO3", how="left")
-
-# Fill missing values for classification and country names
-merged_data["Instrument"] = merged_data["Instrument_y"].combine_first(merged_data["Instrument_x"])
-merged_data["Country"] = merged_data["Country"].fillna("Unknown")
-merged_data["Carbon Tax"] = merged_data["Carbon Tax"].fillna(0).astype(int)
-merged_data["ETS"] = merged_data["ETS"].fillna(0).astype(int)
-
-# Create a choropleth map
-fig = px.choropleth(
-    merged_data,
-    locations="ISO3",
-    color="Instrument",
-    hover_name="Country",
-    hover_data={
-        "Carbon Tax": True,
-        "ETS": True,
-        "Instrument": False,
-    },
-    title="🌍 Carbon Pricing Instruments Around the World, 2024",
-    color_discrete_map={
-        "None": "#e0e0e0",  # Light gray
-        "Carbon Tax": "#66bb6a",  # Green
-        "ETS": "#42a5f5",  # Blue
-        "Both": "#8e24aa",  # Purple
-    }
+# Prepare data for visualization
+tax_data['Instrument_Type'] = tax_data.apply(
+    lambda row: "Both" if row['Carbon Tax'] > 0 and row['ETS'] > 0 
+    else "Carbon Tax" if row['Carbon Tax'] > 0 
+    else "ETS" if row['ETS'] > 0 
+    else "None", 
+    axis=1
 )
 
-# Customize the map layout
-fig.update_layout(
+# Map instruments to colors
+instrument_color_map = {
+    "None": "#ff0000",  # Strong red for None
+    "Carbon Tax": "#66bb6a",  # Light green for Carbon Tax
+    "ETS": "#006400",  # Dark green for ETS
+    "Both": "#003300",  # Very dark green for Both
+}
+
+# Create the map using Plotly
+fig_map = px.choropleth(
+    tax_data,
+    locations="ISO3",  # Country ISO3 codes
+    color="Instrument_Type",  # Color by instrument type
+    hover_name="Country",  # Display country name on hover
+    hover_data={"Carbon Tax": True, "ETS": True, "Instrument_Type": False},
+    title=" ",
+    color_discrete_map=instrument_color_map,
+    projection="natural earth"  # Use a modern map projection
+)
+
+# Customize the layout for a clean design
+fig_map.update_layout(
     geo=dict(
         showframe=False,
         showcoastlines=True,
-        projection_type="equirectangular",
-        projection_scale=1.4,
-        center={"lat": 20, "lon": 0},
+        projection_scale=1.2,  # Adjust map zoom level
+        center={"lat": 10, "lon": 0}  # Center the map
     ),
-    height=800,
-    width=1200,
-    title_x=0.5,
+    margin=dict(t=50, b=50, l=50, r=50),
+    title=dict(
+        font=dict(size=24, color="#2e7d32"),
+        x=0.5  # Center the title
+    ),
+    height=500,
+    width=1200
 )
 
-# Display the map
-st.plotly_chart(fig, use_container_width=False)
+# Display the map in Streamlit
+st.plotly_chart(fig_map, use_container_width=True)
 
-# Step 5: Your Action Plan
+st.markdown("<hr>", unsafe_allow_html=True)
+
+# Step 5: Environmental Performance Index (EPI)
 st.markdown("""
-### Step 5: 🌱 Your Action Plan
+### Step 5: 🌿 Environmental Performance Index (EPI)
 
-The journey to a sustainable planet doesn't stop here. It's time to act!
-
-- Compare your country's carbon pricing initiatives to others.
-- Share insights with peers, policymakers, and on social platforms.
-- Reflect on steps you can take to reduce your carbon footprint.
-
-Every action counts. 🌍 Be the change you wish to see in the world!
+The Environmental Performance Index (EPI) ranks countries on their environmental health and ecosystem vitality.
 """)
+
+# Filter the data for default countries and only for the year 2024
+filtered_epi_data = epi_data[
+    (epi_data['region'].isin(default_countries_names)) & 
+    (epi_data['date'] == 2024)
+]
+
+# Add arrow indicators to the trend column
+filtered_epi_data['trend_arrow'] = filtered_epi_data['trend'].apply(
+    lambda x: "↑" if x > 0 else "↓" if x < 0 else "→"
+)
+
+# Combine trend and arrow into a single column for display
+filtered_epi_data['trend_display'] = filtered_epi_data.apply(
+    lambda row: f"{row['trend_arrow']} {abs(row['trend']):.1f}", axis=1
+)
+
+# Sort the data by value
+sorted_epi_data = filtered_epi_data.sort_values(by='value', ascending=True)
+
+# Create the barplot
+fig_epi_combined = px.bar(
+    sorted_epi_data,
+    y='region',
+    x='value',
+    orientation='h',
+    text='value',
+    color='value',
+    color_continuous_scale=custom_green_scale,
+    labels={
+        'value': 'Environmental Performance Index (EPI)', 
+        'region': 'Country',
+        'trend_display': 'Trend'
+    },
+    # title="Environmental Performance Index (EPI) for Selected Countries (2024)"
+)
+
+# Add EPI and trend data to the bar labels
+fig_epi_combined.update_traces(
+    texttemplate='EPI: %{x:.1f} Trend: %{customdata[0]}',  # Position text next to each other
+    customdata=sorted_epi_data[['trend_display']].to_numpy(),  # Pass trend_display column as customdata
+    textposition='inside',
+    textfont=dict(size=18)  # Make text larger
+)
+
+# Customize the chart
+fig_epi_combined.update_layout(
+    yaxis=dict(title="Country"),
+    xaxis=dict(title="EPI Score"),
+    margin=dict(t=50, b=50, l=100, r=50),
+    coloraxis_showscale=False  # Hide the color scale
+)
+
+# Display the chart in Streamlit
+st.plotly_chart(fig_epi_combined, use_container_width=True)
+
+st.markdown("<hr>", unsafe_allow_html=True)
+
+
+# Step 6: Your Action Plan
+st.markdown("""
+### Step 6: 🌱 Your Action Plan
+
+The path to a sustainable future begins with **awareness** and **action**. Here are some steps you can take:
+
+- 🌍 **Understand the Data**: Compare your country's performance on environmental indicators, such as the Environmental Performance Index (EPI), to identify areas for improvement.
+- 📢 **Spread Awareness**: Share the insights from this data with your community, peers, or policymakers. Social platforms and discussions can amplify your voice.
+- 🌱 **Take Personal Action**: Reflect on steps you can take to reduce your own carbon footprint, such as:
+  - Using energy-efficient appliances and renewable energy sources.
+  - Reducing, reusing, and recycling waste.
+  - Supporting sustainable businesses and initiatives.
+
+💡 **Remember**: Small, consistent actions can lead to significant change when adopted collectively.
+
+Every action matters. Together, we can make a difference. 🌿
+""")
+
 
 # Add a section for data sources and author information
 st.markdown("<hr>", unsafe_allow_html=True)
@@ -324,6 +419,10 @@ st.markdown("""
         <a href="https://www.worldvaluessurvey.org/WVSDocumentationWVL.jsp" target="_blank">Documentation</a></li>
         <li><strong>CO₂ and Greenhouse Gas Emissions:</strong> 
         Data from <a href="https://ourworldindata.org/co2-and-greenhouse-gas-emissions" target="_blank">Our World in Data</a>.</li>
+        <li><strong>Carbon pricing instruments around the world, 2024:</strong> 
+        Data from <a href="https://carbonpricingdashboard.worldbank.org/" target="_blank">World Bank Carbon Pricing Dashboard</a>.</li>
+        <li><strong>The Environmental Performance Index (EPI):</strong> 
+        Data from <a href="https://global-reports.23degrees.eu/epi/root" target="_blank">23 Degrees Environmental Performance Index Report</a>.</li>
     </ul>
 </div>
 """, unsafe_allow_html=True)
