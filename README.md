@@ -30,9 +30,7 @@ pip install -r requirements.txt
 
 ## Data Preparation
 
-The application requires a precomputed dataset file named `precomputed_means.csv`, which should contain mean values of survey responses for different countries and waves. This CSV file must be placed in the app directory and should follow the format:
-
-COUNTRY_ALPHA, S002VS, [question columns]
+The application requires precomputed dataset files which are located in precalculated_data folder.
 
 ## Usage
 

@@ -2,9 +2,8 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from PIL import Image
-from country_mapping import country_info
-from variable_mappings_env import variable_mappings  # Ensure this file contains the question mappings
-import pycountry
+from mappings.country_mapping import country_info
+from mappings.variable_mappings_env import variable_mappings  # Ensure this file contains the question mappings
 
 # Custom CSS to style the app with a unified environmental theme
 st.markdown(
@@ -78,24 +77,24 @@ st.markdown("<hr>", unsafe_allow_html=True)
 # Load the precomputed data with caching
 @st.cache_data
 def load_precomputed_env_data():
-    return pd.read_csv('precomputed_env_data.csv')
+    return pd.read_csv('precalculated_data/precomputed_env_data.csv')
 
 @st.cache_data
 def load_precomputed_age_data():
-    return pd.read_csv('precomputed_age_data.csv')
+    return pd.read_csv('precalculated_data/precomputed_age_data.csv')
 
 @st.cache_data
 def load_co2_data():
-    return pd.read_csv('co2-data.csv')
+    return pd.read_csv('precalculated_data/co2-data.csv')
 
 @st.cache_data
 def load_tax_data():
-    return pd.read_csv('tax_summary.csv')
+    return pd.read_csv('precalculated_data/tax_summary.csv')
 
 # Load the EPI data (replace 'ep.csv' with the correct file path)
 @st.cache_data
 def load_epi_data():
-    return pd.read_csv('epi.csv', delimiter=';')
+    return pd.read_csv('precalculated_data/epi.csv', delimiter=';')
 
 # Load data
 env_data = load_precomputed_env_data()
